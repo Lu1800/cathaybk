@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.entity.Coin;
 import com.example.repository.CoinRepository;
 import com.example.service.HttpService;
+import com.example.vo.ResponseVO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,47 +24,57 @@ public class HelloContraller {
         @Autowired
         private HttpService httpService;
 
-    @ResponseBody
+
     @GetMapping("/Coin")
-    public List<Coin> checkCoinInfo() throws JsonProcessingException, ParseException {
+    public ResponseVO checkCoinInfo() throws JsonProcessingException, ParseException {
 
-        return coinRepository.findAll();
+        String uuId = String.valueOf(UUID.randomUUID());
+
+        return new ResponseVO(uuId,"200","Success",coinRepository.findAll());
     }
 
-    @ResponseBody
+
     @PostMapping("/Coin")
-    public void saveCoin(Coin coin) throws JsonProcessingException, ParseException {
+    public void saveCoin(@RequestBody Coin coin) throws JsonProcessingException, ParseException {
 
         coinRepository.save(coin);
     }
 
-    @ResponseBody
+
     @PutMapping("/Coin")
-    public Coin updateCoin(Coin coin) throws JsonProcessingException, ParseException {
+    public ResponseVO updateCoin(@RequestBody Coin coin) throws JsonProcessingException, ParseException {
 
+        String uuId = String.valueOf(UUID.randomUUID());
         coinRepository.save(coin);
-        return coinRepository.getById(coin.getCode());
+
+        return new ResponseVO(uuId,"200","Success",coinRepository.getById(coin.getCode()));
+
     }
 
-    @ResponseBody
+
     @DeleteMapping("/Coin")
-    public void deleteCoin(Coin coin) throws JsonProcessingException, ParseException {
+    public void deleteCoin(@RequestBody Coin coin) throws JsonProcessingException, ParseException {
 
         coinRepository.delete(coin);
     }
 
-    @ResponseBody
-    @GetMapping("/coindesk")
-    public String getBPI(Coin coin) throws JsonProcessingException, ParseException {
 
+    @GetMapping("/coindesk")
+    public ResponseVO getBPI() throws JsonProcessingException, ParseException {
+
+        String uuId = String.valueOf(UUID.randomUUID());
         String response = httpService.http("https://api.coindesk.com/v1/bpi/currentprice.json");
 
-        return response;
+        JSONObject respJson = new JSONObject(response);
+
+        return new ResponseVO(uuId,"200","Success",respJson.toMap());
     }
 
-    @ResponseBody
+
     @RequestMapping("/coindeskInfoConvert")
-    public String coindeskInfoConvert() throws JsonProcessingException, ParseException {
+    public ResponseVO coindeskInfoConvert() throws JsonProcessingException, ParseException {
+
+        String uuId = String.valueOf(UUID.randomUUID());
 
         String response = httpService.http("https://api.coindesk.com/v1/bpi/currentprice.json");
         System.out.println(response);
@@ -100,8 +111,7 @@ public class HelloContraller {
 
         output.put("Bitcoin Price Index",new JSONObject().put("USD",usdJson ).put("GBP",gbpJson).put("EUR",eurJson));
 
-
-        return output.toString();
+        return new ResponseVO(uuId,"200","Success",output.toMap());
 
     }
 }

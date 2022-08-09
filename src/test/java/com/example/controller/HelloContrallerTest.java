@@ -34,6 +34,8 @@ class HelloContrallerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
+
     @Test
     @Order(1)
     void checkCoinInfo() throws Exception {
@@ -45,16 +47,19 @@ class HelloContrallerTest {
                 .getContentAsString(Charset.defaultCharset());
 
 //        System.out.println(result);
-        Assertions.assertThat(result).isEqualTo("[{\"code\":\"USD\",\"translate\":\"美金\"},{\"code\":\"GBP\",\"translate\":\"英鎊\"},{\"code\":\"EUR\",\"translate\":\"歐元\"}]");
-
+        JSONObject jsonObject = new JSONObject(result);
+        Assertions.assertThat(String.valueOf(jsonObject.getJSONArray("data"))).isEqualTo("[{\"code\":\"USD\",\"translate\":\"美金\"},{\"code\":\"GBP\",\"translate\":\"英鎊\"},{\"code\":\"EUR\",\"translate\":\"歐元\"}]");
     }
 
     @Test
     @Order(2)
     void saveCoin() throws Exception {
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/Coin")
-                        .param("code","TWD").param("translate","台幣"))
+        mockMvc.perform(MockMvcRequestBuilders.post("/Coin").contentType(APPLICATION_JSON_UTF8)
+                .content("{\n" +
+                        "    \"code\": \"TWD\",\n" +
+                        "    \"translate\": \"台幣\"\n" +
+                        "}"))
                 .andExpect(status().isOk());
 
         String result = mockMvc.perform(MockMvcRequestBuilders.get("/Coin"))
@@ -64,7 +69,8 @@ class HelloContrallerTest {
                 .getContentAsString(Charset.defaultCharset());
 
 //        System.out.println(result);
-        Assertions.assertThat(result)
+        JSONObject jsonObject = new JSONObject(result);
+        Assertions.assertThat(String.valueOf(jsonObject.getJSONArray("data")))
                 .isEqualTo("[{\"code\":\"USD\",\"translate\":\"美金\"},{\"code\":\"GBP\",\"translate\":\"英鎊\"},{\"code\":\"EUR\",\"translate\":\"歐元\"},{\"code\":\"TWD\",\"translate\":\"台幣\"}]");
     }
 
@@ -72,15 +78,19 @@ class HelloContrallerTest {
     @Order(3)
     void updateCoin() throws Exception {
 
-        String result = mockMvc.perform(MockMvcRequestBuilders.put("/Coin")
-                        .param("code","TWD").param("translate","臺幣"))
+        String result = mockMvc.perform(MockMvcRequestBuilders.put("/Coin").contentType(APPLICATION_JSON_UTF8)
+                        .content("{\n" +
+                                "    \"code\": \"TWD\",\n" +
+                                "    \"translate\": \"臺幣\"\n" +
+                                "}"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(Charset.defaultCharset());
 
 //        System.out.println(result);
-        Assertions.assertThat(result)
+        JSONObject jsonObject = new JSONObject(result);
+        Assertions.assertThat(String.valueOf(jsonObject.getJSONObject("data")))
                 .isEqualTo("{\"code\":\"TWD\",\"translate\":\"臺幣\"}");
     }
 
@@ -88,8 +98,11 @@ class HelloContrallerTest {
     @Order(4)
     void deleteCoin() throws Exception {
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/Coin")
-                .param("code","TWD").param("translate","臺幣"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/Coin").contentType(APPLICATION_JSON_UTF8)
+                        .content("{\n" +
+                                "    \"code\": \"TWD\",\n" +
+                                "    \"translate\": \"臺幣\"\n" +
+                                "}"))
         .andExpect(status().isOk());
 
         String result = mockMvc.perform(MockMvcRequestBuilders.get("/Coin"))
@@ -99,7 +112,8 @@ class HelloContrallerTest {
                 .getContentAsString(Charset.defaultCharset());
 
 //        System.out.println(result);
-        Assertions.assertThat(result).isEqualTo("[{\"code\":\"USD\",\"translate\":\"美金\"},{\"code\":\"GBP\",\"translate\":\"英鎊\"},{\"code\":\"EUR\",\"translate\":\"歐元\"}]");
+        JSONObject jsonObject = new JSONObject(result);
+        Assertions.assertThat(String.valueOf(jsonObject.getJSONArray("data"))).isEqualTo("[{\"code\":\"USD\",\"translate\":\"美金\"},{\"code\":\"GBP\",\"translate\":\"英鎊\"},{\"code\":\"EUR\",\"translate\":\"歐元\"}]");
     }
 
     @Test
@@ -114,7 +128,7 @@ class HelloContrallerTest {
 
 //        System.out.println(result);
         JSONObject jsonObject = new JSONObject(result);
-        Assertions.assertThat(jsonObject.has("bpi")).isTrue();
+        Assertions.assertThat(jsonObject.getJSONObject("data").has("bpi")).isTrue();
     }
 
     @Test
@@ -129,6 +143,6 @@ class HelloContrallerTest {
 
 //        System.out.println(result);
         JSONObject jsonObject = new JSONObject(result);
-        Assertions.assertThat(jsonObject.has("Bitcoin Price Index")).isTrue();
+        Assertions.assertThat(jsonObject.getJSONObject("data").has("Bitcoin Price Index")).isTrue();
     }
 }
